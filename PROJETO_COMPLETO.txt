@@ -1,0 +1,72 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# API REST – Controle de Estoque  |  Trabalho de Avaliação – Web Avançado
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Mapeamento do enunciado → tema do grupo:
+#   Produto    → Produto       (campos: Nome, Preco, Estoque=Quantidade)
+#   Categoria  → TipoProduto   (campos: Nome, Descricao)
+#   Cliente    → Estoquista    (campos: Nome, Email, Idade)
+#
+# Requisitos atendidos: ✅ CORS  ✅ Swagger  ✅ Data Annotation
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# COMO RODAR O PROJETO
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# 1. Criar o banco:
+#    CREATE DATABASE controle_estoque;
+#
+# 2. Ajustar a connection string em appsettings.json com seu user/password.
+#
+# 3. No terminal, dentro da pasta do projeto:
+#    dotnet ef migrations add Inicial
+#    dotnet ef database update
+#    dotnet run
+#
+# 4. Acessar o Swagger:
+#    http://localhost:5000/swagger   (ou a porta exibida no terminal)
+#
+# ═══════════════════════════════════════════════════════════════════════════
+# JSONs DE TESTE (copiar direto no Swagger)
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# ── PRODUTO ──────────────────────────────────────────────────────────────
+# POST  →  201 Created
+# {"nome":"Parafuso M8","preco":0.75,"estoque":500}
+#
+# PUT   →  204 No Content
+# {"id":1,"nome":"Parafuso M10","preco":0.90,"estoque":350}
+#
+# ── TIPO DE PRODUTO ───────────────────────────────────────────────────────
+# POST  →  201 Created
+# {"nome":"Fixadores","descricao":"Parafusos, porcas e arruelas"}
+#
+# PUT   →  204 No Content
+# {"id":1,"nome":"Ferramentas Manuais","descricao":"Chaves, martelos e alicates"}
+#
+# ── ESTOQUISTA ────────────────────────────────────────────────────────────
+# POST  →  201 Created
+# {"nome":"Carlos Mendes","email":"carlos.mendes@estoque.com","idade":32}
+#
+# PUT   →  204 No Content
+# {"id":1,"nome":"Ana Paula Souza","email":"ana.souza@estoque.com","idade":27}
+#
+# ═══════════════════════════════════════════════════════════════════════════
+# JSONs COM ERRO  →  todos retornam 400 Bad Request
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# PRODUTO
+# {"nome":"A","preco":10.00,"estoque":5}           → "Nome deve ter entre 3 e 120 caracteres."
+# {"nome":"Produto Teste","preco":0,"estoque":5}   → "Preço deve ser maior que zero."
+# {"nome":"Produto Teste","preco":5.00,"estoque":-1}→ "Estoque não pode ser negativo."
+#
+# TIPO DE PRODUTO
+# {"descricao":"Sem nome"}                          → "Nome do tipo de produto é obrigatório."
+# {"nome":"Ti","descricao":"Texto válido"}           → "Nome deve ter entre 3 e 80 caracteres."
+#
+# ESTOQUISTA
+# {"nome":"João","email":"joao@email.com","idade":16} → "Idade mínima é 18 anos."
+# {"nome":"Maria","email":"maria-gmail.com","idade":22}→ "Email em formato inválido."
+# {"email":"valido@email.com","idade":25}              → "Nome é obrigatório."
