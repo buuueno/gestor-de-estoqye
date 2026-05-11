@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ControleEstoqueApi.Data;
@@ -6,6 +7,7 @@ using ControleEstoqueApi.DTOs.TipoProduto;
 
 namespace ControleEstoqueApi.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class TiposProdutoController : ControllerBase {
