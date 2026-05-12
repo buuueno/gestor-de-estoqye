@@ -86,4 +86,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
+// Primeiro commit: comentário adicionado para registrar participação no projeto
 app.Run();
