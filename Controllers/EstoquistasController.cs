@@ -36,10 +36,22 @@ public class EstoquistasController : ControllerBase {
     // POST → 201 Created
     [HttpPost]
     public async Task<ActionResult<EstoquistaDto>> CreateAsync(EstoquistaCreateDto dto) {
+        if (await _context.Estoquistas.AnyAsync(e => e.Email == dto.Email)) {
+            return BadRequest("Email já cadastrado para outro estoquista.");
+        }
+
         var estoquista = new Estoquista { Nome = dto.Nome, Email = dto.Email, Idade = dto.Idade };
         _context.Estoquistas.Add(estoquista);
         await _context.SaveChangesAsync();
-        return CreatedAtRoute("GetEstoquistaById", new { id = estoquista.Id }, new { id = estoquista.Id });
+
+        var result = new EstoquistaDto {
+            Id = estoquista.Id,
+            Nome = estoquista.Nome,
+            Email = estoquista.Email,
+            Idade = estoquista.Idade
+        };
+
+        return CreatedAtRoute("GetEstoquistaById", new { id = estoquista.Id }, result);
     }
 
     // PUT → 204 No Content
@@ -48,7 +60,14 @@ public class EstoquistasController : ControllerBase {
         if (id != dto.Id) return BadRequest("Id da URL não confere com o Id do corpo.");
         var estoquista = await _context.Estoquistas.FindAsync(id);
         if (estoquista is null) return NotFound();
-        estoquista.Nome = dto.Nome; estoquista.Email = dto.Email; estoquista.Idade = dto.Idade;
+
+        if (await _context.Estoquistas.AnyAsync(e => e.Email == dto.Email && e.Id != id)) {
+            return BadRequest("Email já cadastrado para outro estoquista.");
+        }
+
+        estoquista.Nome = dto.Nome;
+        estoquista.Email = dto.Email;
+        estoquista.Idade = dto.Idade;
         await _context.SaveChangesAsync();
         return NoContent();
     }
