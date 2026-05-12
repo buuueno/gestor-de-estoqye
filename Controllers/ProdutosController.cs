@@ -18,7 +18,7 @@ public class ProdutosController : ControllerBase {
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ProdutoDto>>> GetAllAsync() {
+    public async Task<ActionResult<ApiResponse<IEnumerable<ProdutoDto>>>> GetAllAsync() {
         var produtos = await _context.Produtos
             .AsNoTracking()
             .Include(p => p.TipoProduto)
@@ -31,32 +31,35 @@ public class ProdutosController : ControllerBase {
             TipoProdutoId = p.TipoProdutoId,
             TipoProdutoNome = p.TipoProduto?.Nome ?? string.Empty
         });
-        return Ok(result);
+        return Ok(ApiResponse<IEnumerable<ProdutoDto>>.Ok(result, "Produtos recuperados com sucesso."));
     }
 
     [HttpGet("{id:int}", Name = "GetProdutoById")]
-    public async Task<ActionResult<ProdutoDto>> GetByIdAsync(int id) {
+    public async Task<ActionResult<ApiResponse<ProdutoDto>>> GetByIdAsync(int id) {
         var produto = await _context.Produtos
             .AsNoTracking()
             .Include(p => p.TipoProduto)
             .FirstOrDefaultAsync(p => p.Id == id);
-        if (produto is null) return NotFound();
-        return Ok(new ProdutoDto { 
+        if (produto is null) 
+            return NotFound(ApiResponse<ProdutoDto>.NotFound($"Produto com id {id} não encontrado."));
+        
+        return Ok(ApiResponse<ProdutoDto>.Ok(new ProdutoDto { 
             Id = produto.Id, 
             Nome = produto.Nome, 
             Preco = produto.Preco, 
             Estoque = produto.Estoque,
             TipoProdutoId = produto.TipoProdutoId,
             TipoProdutoNome = produto.TipoProduto?.Nome ?? string.Empty
-        });
+        }));
     }
 
     // POST → 201 Created
     [HttpPost]
-    public async Task<ActionResult<ProdutoDto>> CreateAsync(ProdutoCreateDto dto) {
+    public async Task<ActionResult<ApiResponse<ProdutoDto>>> CreateAsync(ProdutoCreateDto dto) {
         // Validar se TipoProduto existe
         var tipoProduto = await _context.TiposProduto.FindAsync(dto.TipoProdutoId);
-        if (tipoProduto is null) return BadRequest("TipoProdutoId inválido.");
+        if (tipoProduto is null) 
+            return BadRequest(ApiResponse<ProdutoDto>.BadRequest("TipoProdutoId inválido."));
 
         var produto = new Produto { 
             Nome = dto.Nome, 
@@ -66,20 +69,34 @@ public class ProdutosController : ControllerBase {
         };
         _context.Produtos.Add(produto);
         await _context.SaveChangesAsync();
-        return CreatedAtRoute("GetProdutoById", new { id = produto.Id }, new { id = produto.Id });
+
+        var produtoDto = new ProdutoDto {
+            Id = produto.Id,
+            Nome = produto.Nome,
+            Preco = produto.Preco,
+            Estoque = produto.Estoque,
+            TipoProdutoId = produto.TipoProdutoId,
+            TipoProdutoNome = tipoProduto.Nome
+        };
+
+        return CreatedAtRoute("GetProdutoById", new { id = produto.Id }, ApiResponse<ProdutoDto>.Ok(produtoDto, "Produto criado com sucesso."));
     }
 
     // PUT → 204 No Content
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateAsync(int id, ProdutoUpdateDto dto) {
-        if (id != dto.Id) return BadRequest("Id da URL não confere com o Id do corpo.");
+        if (id != dto.Id) 
+            return BadRequest(ApiResponse<object>.BadRequest("Id da URL não confere com o Id do corpo."));
         
         // Validar se TipoProduto existe
         var tipoProduto = await _context.TiposProduto.FindAsync(dto.TipoProdutoId);
-        if (tipoProduto is null) return BadRequest("TipoProdutoId inválido.");
+        if (tipoProduto is null) 
+            return BadRequest(ApiResponse<object>.BadRequest("TipoProdutoId inválido."));
         
         var produto = await _context.Produtos.FindAsync(id);
-        if (produto is null) return NotFound();
+        if (produto is null) 
+            return NotFound(ApiResponse<object>.NotFound($"Produto com id {id} não encontrado."));
+        
         produto.Nome = dto.Nome; 
         produto.Preco = dto.Preco; 
         produto.Estoque = dto.Estoque;
@@ -92,7 +109,9 @@ public class ProdutosController : ControllerBase {
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteAsync(int id) {
         var produto = await _context.Produtos.FindAsync(id);
-        if (produto is null) return NotFound();
+        if (produto is null) 
+            return NotFound(ApiResponse<object>.NotFound($"Produto com id {id} não encontrado."));
+        
         _context.Produtos.Remove(produto);
         await _context.SaveChangesAsync();
         return NoContent();

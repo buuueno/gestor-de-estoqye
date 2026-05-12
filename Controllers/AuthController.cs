@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ControleEstoqueApi.DTOs.Auth;
 using ControleEstoqueApi.Services;
+using ControleEstoqueApi.Models;
 
 namespace ControleEstoqueApi.Controllers;
 
@@ -19,9 +20,9 @@ public class AuthController : ControllerBase {
         var response = _authService.Login(dto);
 
         if (string.IsNullOrEmpty(response.Token)) {
-            return Unauthorized(response);
+            return Unauthorized(ApiResponse<object>.BadRequest(response.Message));
         }
 
-        return Ok(response);
+        return Ok(ApiResponse<AuthResponseDto>.Ok(response, response.Message));
     }
 }

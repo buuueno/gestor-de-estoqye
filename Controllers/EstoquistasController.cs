@@ -18,26 +18,28 @@ public class EstoquistasController : ControllerBase {
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<EstoquistaDto>>> GetAllAsync() {
+    public async Task<ActionResult<ApiResponse<IEnumerable<EstoquistaDto>>>> GetAllAsync() {
         var estoquistas = await _context.Estoquistas.AsNoTracking().ToListAsync();
         var result = estoquistas.Select(e => new EstoquistaDto {
             Id = e.Id, Nome = e.Nome, Email = e.Email, Idade = e.Idade
         });
-        return Ok(result);
+        return Ok(ApiResponse<IEnumerable<EstoquistaDto>>.Ok(result, "Estoquistas recuperados com sucesso."));
     }
 
     [HttpGet("{id:int}", Name = "GetEstoquistaById")]
-    public async Task<ActionResult<EstoquistaDto>> GetByIdAsync(int id) {
+    public async Task<ActionResult<ApiResponse<EstoquistaDto>>> GetByIdAsync(int id) {
         var e = await _context.Estoquistas.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
-        if (e is null) return NotFound();
-        return Ok(new EstoquistaDto { Id = e.Id, Nome = e.Nome, Email = e.Email, Idade = e.Idade });
+        if (e is null) 
+            return NotFound(ApiResponse<EstoquistaDto>.NotFound($"Estoquista com id {id} não encontrado."));
+        
+        return Ok(ApiResponse<EstoquistaDto>.Ok(new EstoquistaDto { Id = e.Id, Nome = e.Nome, Email = e.Email, Idade = e.Idade }));
     }
 
     // POST → 201 Created
     [HttpPost]
-    public async Task<ActionResult<EstoquistaDto>> CreateAsync(EstoquistaCreateDto dto) {
+    public async Task<ActionResult<ApiResponse<EstoquistaDto>>> CreateAsync(EstoquistaCreateDto dto) {
         if (await _context.Estoquistas.AnyAsync(e => e.Email == dto.Email)) {
-            return BadRequest("Email já cadastrado para outro estoquista.");
+            return BadRequest(ApiResponse<EstoquistaDto>.BadRequest("Email já cadastrado para outro estoquista."));
         }
 
         var estoquista = new Estoquista { Nome = dto.Nome, Email = dto.Email, Idade = dto.Idade };
@@ -51,18 +53,21 @@ public class EstoquistasController : ControllerBase {
             Idade = estoquista.Idade
         };
 
-        return CreatedAtRoute("GetEstoquistaById", new { id = estoquista.Id }, result);
+        return CreatedAtRoute("GetEstoquistaById", new { id = estoquista.Id }, ApiResponse<EstoquistaDto>.Ok(result, "Estoquista criado com sucesso."));
     }
 
     // PUT → 204 No Content
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateAsync(int id, EstoquistaUpdateDto dto) {
-        if (id != dto.Id) return BadRequest("Id da URL não confere com o Id do corpo.");
+        if (id != dto.Id) 
+            return BadRequest(ApiResponse<object>.BadRequest("Id da URL não confere com o Id do corpo."));
+        
         var estoquista = await _context.Estoquistas.FindAsync(id);
-        if (estoquista is null) return NotFound();
+        if (estoquista is null) 
+            return NotFound(ApiResponse<object>.NotFound($"Estoquista com id {id} não encontrado."));
 
         if (await _context.Estoquistas.AnyAsync(e => e.Email == dto.Email && e.Id != id)) {
-            return BadRequest("Email já cadastrado para outro estoquista.");
+            return BadRequest(ApiResponse<object>.BadRequest("Email já cadastrado para outro estoquista."));
         }
 
         estoquista.Nome = dto.Nome;
@@ -76,7 +81,9 @@ public class EstoquistasController : ControllerBase {
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteAsync(int id) {
         var estoquista = await _context.Estoquistas.FindAsync(id);
-        if (estoquista is null) return NotFound();
+        if (estoquista is null) 
+            return NotFound(ApiResponse<object>.NotFound($"Estoquista com id {id} não encontrado."));
+        
         _context.Estoquistas.Remove(estoquista);
         await _context.SaveChangesAsync();
         return NoContent();

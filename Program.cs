@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ControleEstoqueApi.Data;
 using ControleEstoqueApi.Services;
+using ControleEstoqueApi.Middleware;
 using System.Text;
 using Microsoft.OpenApi.Models;
 
@@ -45,7 +46,9 @@ builder.Services.AddCors(options =>
 // ✅ Registrar serviço de autenticação
 builder.Services.AddScoped<AuthService>();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options => {
+    options.Filters.Add(typeof(ValidationFilter));
+});
 builder.Services.AddEndpointsApiExplorer();
 
 // ✅ Swagger obrigatório
@@ -73,6 +76,9 @@ builder.Services.AddSwaggerGen(c => {
 });
 
 var app = builder.Build();
+
+// ✅ Middleware de tratamento de erros global
+app.UseMiddleware<ErrorHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
