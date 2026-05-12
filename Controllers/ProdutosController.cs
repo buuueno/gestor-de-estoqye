@@ -7,6 +7,7 @@ using ControleEstoqueApi.DTOs.Produto;
 
 namespace ControleEstoqueApi.Controllers;
 
+// Segundo commit: comentário de participação no controller de produtos
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
