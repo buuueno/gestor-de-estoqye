@@ -1,3 +1,4 @@
+// Controle de Estoquistas
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
